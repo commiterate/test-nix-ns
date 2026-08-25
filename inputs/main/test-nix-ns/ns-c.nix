@@ -1,0 +1,51 @@
+# ----------------------------------------------------------------------------------------------------
+# Function that takes all namespaces and returns namespace bindings.
+# ----------------------------------------------------------------------------------------------------
+
+U:
+
+# ----------------------------------------------------------------------------------------------------
+# Requires/imports.
+#
+# `with` behaves like `require`/`import` in many programming languages.
+# Its usage tends to be scoped since inheriting bindings from attribute sets
+# declared elsewhere makes it difficult to know what bindings are present, especially
+# in the absence of a good LSP.
+#
+# For example, Nixpkgs derivations sometimes use it for `meta` (e.g. `meta = with lib; { ... };`).
+# Even this is undesirable as many usages are switched to `meta = { license = lib.licenses.mit; maintainers = with lib.maintainers [ ... ]; };`.
+# ----------------------------------------------------------------------------------------------------
+
+# Equivalent to:
+# - `(require [builtins :refer :all])`
+# - `from builtins import *`
+with builtins
+// {
+  # Equivalent to:
+  # - `(require ["test-nix-ns.ns-a" :as ns-a])`
+  # - `import "test-nix-ns.ns-a" as ns-a`
+  ns-a = U."test-nix-ns.ns-a";
+  # Equivalent to:
+  # - `(require ["test-nix-ns.ns-b" :refer [strawberry cake]])`
+  # - `from "test-nix-ns.ns-b" import strawberry, cake`
+  inherit (U."test-nix-ns.ns-b") strawberry cake;
+};
+
+# ----------------------------------------------------------------------------------------------------
+# Private bindings.
+#
+# `let...in` behaves like `let` in many Lisp dialects and `let...in` in Haskell.
+# ----------------------------------------------------------------------------------------------------
+
+let
+  apple-cake = ns-a.apple + cake;
+  strawberry-pie = strawberry + ns-a.pie;
+in
+
+# ----------------------------------------------------------------------------------------------------
+# Public bindings.
+# ----------------------------------------------------------------------------------------------------
+
+{
+  inherit apple-cake strawberry-pie;
+}
